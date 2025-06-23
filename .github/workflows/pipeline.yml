@@ -41,7 +41,7 @@ jobs:
             --output ./publish
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ci-cd-dio-win-x64
           path: ./publish
