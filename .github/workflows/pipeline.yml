@@ -13,3 +13,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ github.workspace }} --runtime ${{ vars.runtime }} --no-cache
+
