@@ -1,4 +1,4 @@
-name: .NET
+name: Build, Test & Publish (.NET 9)
 
 on:
   push:
@@ -8,9 +8,38 @@ on:
 
 jobs:
   build:
-    runs-on: [Windows-latest]
+    runs-on: windows-latest
 
-steps:
-  - name: Echo         # nome amigável para este passo
-    run: echo "Hello, world!"  
+    steps:
+      # 1) Faz checkout do repositório
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      # 2) Instala o SDK .NET 9.0
+      - name: Setup .NET 9.0
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.0.x"
+
+      # 3) Restaura dependências
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # 4) Compila a aplicação (Release) sem restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      # 5) Executa os testes, se houver
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+      # 6) Publica para um diretório “publish/”
+      - name: Publish
+        run: dotnet publish --configuration Release --no-build --output publish
+
+      # (Opcional) 7) Armazena artefatos do publish
+      - name: Upload publish artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: published-app
+          path: publish/
