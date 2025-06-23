@@ -1,4 +1,4 @@
-name: Build, Test & Publish (.NET 9)
+name: .NET
 
 on:
   push:
@@ -8,38 +8,8 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: [ self-hosted, Windows ]
 
     steps:
-      # 1) Faz checkout do repositório
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # 2) Instala o SDK .NET 9.0
-      - name: Setup .NET 9.0
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: "9.0.x"
-
-      # 3) Restaura dependências
-      - name: Restore dependencies
-        run: dotnet restore
-
-      # 4) Compila a aplicação (Release) sem restore
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      # 5) Executa os testes
-      - name: Test
-        run: dotnet test --no-build --verbosity normal
-
-      # 6) Publica a aplicação para a pasta 'publish/'
-      - name: Publish
-        run: dotnet publish --configuration Release --no-build --output publish
-
-      # 7) Faz upload dos artefatos publicados (agora no v4)
-      - name: Upload publish artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: published-app
-          path: publish/
+      - name: Checkout repository
+        uses: actions/checkout@v2
