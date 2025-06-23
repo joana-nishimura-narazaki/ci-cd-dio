@@ -1,21 +1,16 @@
-name: CI: Build, Test & Publish (.NET 9)
+name: .NET 9 CI/CD
 
-# dispara em push e pull request na branch main
 on:
   push:
-    branches: ["main"]
+    branches:
+      - main
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
 
 jobs:
-  build-test-publish:
-    # você pode usar 'windows-latest' ou o seu self-hosted se preferir
+  build:
     runs-on: windows-latest
-
-    strategy:
-      # matrix pra expandir pra multiplos RIDs, se necessário
-      matrix:
-        runtime: ["win-x64"]
 
     steps:
       - name: Checkout repository
@@ -24,26 +19,21 @@ jobs:
       - name: Setup .NET 9 SDK
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore --runtime ${{ matrix.runtime }} --no-cache
+        run: dotnet restore
 
       - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
-      - name: Run unit tests
+      - name: Run tests
         run: dotnet test --configuration Release --no-build --verbosity normal
 
       - name: Publish self-contained app
-        run: |
-          dotnet publish \
-            --configuration Release \
-            --runtime ${{ matrix.runtime }} \
-            --self-contained true \
-            --output ./publish
+        run: dotnet publish --configuration Release --self-contained --output ./publish
 
-      - name: Upload published artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: published-app
