@@ -1,47 +1,50 @@
-name: .NET 9 CI/CD
+name: CI: Build, Test & Publish (.NET 9)
 
+# dispara em push e pull request na branch main
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build-test-publish:
+    # você pode usar 'windows-latest' ou o seu self-hosted se preferir
     runs-on: windows-latest
-    env:
-      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+
+    strategy:
+      # matrix pra expandir pra multiplos RIDs, se necessário
+      matrix:
+        runtime: ["win-x64"]
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
 
       - name: Restore dependencies
-        # note: --no-cache goes *after* restore, not as a RID
-        run: dotnet restore --no-cache
+        run: dotnet restore --runtime ${{ matrix.runtime }} --no-cache
 
-      - name: Build (Release)
+      - name: Build solution
         run: dotnet build --configuration Release --no-restore
 
-      - name: Run tests
-        # skip if you have no test projects
+      - name: Run unit tests
         run: dotnet test --configuration Release --no-build --verbosity normal
 
-      - name: Publish self-contained
+      - name: Publish self-contained app
         run: |
           dotnet publish \
             --configuration Release \
-            --runtime win-x64 \
+            --runtime ${{ matrix.runtime }} \
             --self-contained true \
             --output ./publish
 
-      - name: Upload artifact
+      - name: Upload published artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ci-cd-dio-win-x64
+          name: published-app
           path: ./publish
