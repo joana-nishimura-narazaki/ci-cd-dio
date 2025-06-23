@@ -1,4 +1,4 @@
-name: .NET
+name: .NET 9 CI/CD
 
 on:
   push:
@@ -7,13 +7,41 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    runs-on: [ self-hosted, Windows ]
+  build-test-publish:
+    runs-on: windows-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '9.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore ${{ github.workspace }} --runtime ${{ vars.runtime }} --no-cache
+        # note: --no-cache goes *after* restore, not as a RID
+        run: dotnet restore --no-cache
 
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        # skip if you have no test projects
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Publish self-contained
+        run: |
+          dotnet publish \
+            --configuration Release \
+            --runtime win-x64 \
+            --self-contained true \
+            --output ./publish
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ci-cd-dio-win-x64
+          path: ./publish
